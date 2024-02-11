@@ -2,9 +2,10 @@ import { View, StyleSheet, ScrollView ,TouchableOpacity, Animated, Dimensions, F
 import React, { useEffect, useRef, useState } from 'react'
 import HomeUI from '../components/homeUI'
 import { Card, Text, Icon, useTheme, ButtonGroup, Tab, TabView, makeStyles, useThemeMode } from '@rneui/themed'
-import { camelToCapital } from '../utility'
+import { camelToCapital } from '../core/utility'
 import {CropDetail, NPK, Scheduler} from '../components/cropElements'
 import TimelineItem from '../components/timelineItem'
+import { BACKEND } from '../core/var'
 
 export default function Crop({route}) {
   const {name,area,stage,img} = route.params
@@ -14,29 +15,14 @@ export default function Crop({route}) {
   // const [index, setIndex] = useState(0);
 
   useEffect(()=>{
-    setCropData({
-      ...{name,area,stage},
-      grown:'pot',
-      npk:[20,10,5],
-      ph:'6.5',
-      phStatus:'optimal',
-      schedule:[
-        { title: 'Watering', description: 'Additional Description', time: '2024-02-06T12:30:45.678Z' },
-        { title: 'Watering', description: 'Additional Description', time: '2024-02-06T12:30:45.678Z' },
-        { title: 'Fertilizer', description: 'Additional Description', time: '2024-02-06T12:30:45.678Z' },
-        { title: 'Watering', description: 'Additional Description', time: '2024-02-06T12:30:45.678Z' },
-        { title: 'Watering', description: 'Additional Description', time: '2024-02-08T12:30:45.678Z' },
-        { title: 'Watering', description: 'Additional Description', time: '2024-02-08T12:30:45.678Z' },
-        { title: 'Fertilizer', description: 'Additional Description', time: '2024-08-02T12:30:45.678Z' },
-        { title: 'Watering', description: 'Additional Description', time: '2024-08-02T12:30:45.678Z' },
-        { title: 'Watering', description: 'Additional Description', time: '2024-08-02T12:30:45.678Z' },
-        { title: 'Watering', description: 'Additional Description', time: '2024-02-06T12:30:45.678Z' },
-        // Add more events as needed
-      ],
+    fetch(BACKEND+'auth/getcrop_schedule/?crop='+name,{
+      method:"GET" ,headers: {'Content-Type': 'application/json',},
     })
-    
-  },[])
+      .then(res => res.json())
+      .then(data => setCropData(data))
+      .catch(err => console.error('err : ',err))    
 
+  },[])
 
   return (
     cropData &&
@@ -55,30 +41,11 @@ export default function Crop({route}) {
       </Card>
 
 
-      <Card containerStyle={[styles.timelineCardContainer,{height: windowHeight-130}]}>
-
-        {/* <Tab value={index} onChange={(e) => setIndex(e)} indicatorStyle={{height: 3}}>
-          <Tab.Item title={'Schedule'} />
-          <Tab.Item title={'History'}  />
-        </Tab>
-    
-        <TabView 
-          value={index} 
-          onChange={setIndex} 
-          containerStyle={{marginTop:15,minHeight:450}}
-        >
-        <TabView.Item style={{ width: '100%',marginLeft:15,minHeight:"100%"}}>
-            <Timeline data={cropData.schedule}/> 
-          </TabView.Item>
-          <TabView.Item style={{ width: '100%',height:"100%",marginLeft:15}}>
-            <Timeline data={cropData.history}/>
-          </TabView.Item>
-        </TabView> */}
-        
-        {/* <Scheduler cropData={cropData} widthOffset={30*2}/> */}
+      {cropData.schedule.length !== 0 &&
+      <Card containerStyle={[styles.timelineCardContainer,{maxHeight: windowHeight-130,}]}>
         <Scheduler cropData={cropData}/>
         
-      </Card>
+      </Card>}
 
     </HomeUI>
   )
@@ -96,7 +63,8 @@ const useStyles = makeStyles(theme => ({
   timelineCardContainer:{
     borderRadius:12,
     marginBottom:15,
-    paddingBottom:115, //no idea why
+    // paddingBottom:115, //no idea why
+    paddingTop:30,
     overflow:"hidden",
   },
 }))

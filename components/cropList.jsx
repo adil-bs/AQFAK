@@ -1,23 +1,20 @@
 import React, { useState,useEffect } from 'react'
 import {  TouchableOpacity, View } from 'react-native'
 import {Text, Icon, ListItem, Card, Button, Tooltip, makeStyles, Image} from '@rneui/themed';
-import useImagePermission from './imagePermission';
+import { cropDetailIconProps } from './cropElements';
 
 export function CropList (props)  {
-    const {name,area,stage,img,condition,navigation} = props
+    const {name,area,stage,img,ph,phStatus,condition,navigation} = props
     const styles = useStyles()
-    const {selectedImage, pickImage} = useImagePermission()
     const phaseIndicator = {preparation:"yellow",sowing:"#FFB300",irrigaton:"#F57C00",harvest:"red"}
     
   return (
+    <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('Crop',{name,area,stage,img})}>
     <Card 
         containerStyle={{borderRadius:12}} 
         wrapperStyle={{justifyContent:"space-between",flexDirection:"row"}}
-        onStartShouldSetResponder = {()=>true}
-        onResponderRelease={() => navigation.navigate('Crop',{name,area,stage,img})}
     >
         <View style={{flex:1}}>
-            {/* <Text style={{marginBottom:10}} h3>{name}</Text> */}
             <Text 
                 style={{marginBottom:10}} 
                 numberOfLines={2} 
@@ -26,29 +23,24 @@ export function CropList (props)  {
             >{name}</Text>
             <Text >{area}</Text>
             <View style={styles.inline}>
-                <Icon name="ellipse" size={12} type={"ionicon"} color={phaseIndicator[stage]}  />
+                <Icon {...cropDetailIconProps[stage]} size={15} color={phaseIndicator[stage.toLowerCase()]}  />
                 <Text style={styles.gray}> {stage}</Text>        
             </View>    
         </View>
 
-        <View style={{width:90,marginLeft:10}}>
-        {selectedImage ?
-            <Image source={{ uri: selectedImage }} style={styles.image} />
-        :
-            <TouchableOpacity style={{position:"relative"}} onPress={pickImage}>   
-                <View style={styles.addImagePlusSign}>
-                    <Icon name="add-circle" color={'gray'} size={30} type={"ionicon"} />
-                </View>    
-                <Icon name="image" size={80} color={'gray'} type={"ionicon"} />
-            </TouchableOpacity>
-        }
+        <View style={styles.circle}>
+            <View style={styles.innerCircle}>
+                <Text style={[styles.phColor,{fontSize:25,}]} bold>{ph} </Text>
+                <Text style={styles.phColor}>pH</Text>
+            </View>
         </View>
          
     </Card>
+    </TouchableOpacity>
   )
 }
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme,props) => ({
     gray:{
         color:"gray",
     },
@@ -57,16 +49,26 @@ const useStyles = makeStyles(theme => ({
         flexDirection:"row",
         marginTop:4,
     },
-    addImagePlusSign:{
-        position:"absolute",
-        right:-10,
-        zIndex:10,
-        backgroundColor:theme.colors.cardUI,
-        borderRadius:30,
-    },
-    image:{
+    circle:{
+        borderRadius:100,
+        backgroundColor:"#2E7D32"+(theme.mode==='light'?'9A':''),
         height:90,
         width:90,
-        borderRadius:12,
+        padding:6,
+    },
+    innerCircle:{
+        borderRadius:100,
+        backgroundColor:theme.colors.cardUI,
+        height:78,
+        width:78,
+        justifyContent:"center",
+        alignItems:"center",
+        rowGap:2,
+    },
+    phText:{
+        fontSize:25,
+    },
+    phColor:{
+        color:"green",
     },
 }))

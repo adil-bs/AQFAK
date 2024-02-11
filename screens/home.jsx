@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {  View, ScrollView, Dimensions} from "react-native";
 import { CropList} from '../components/cropList';
 import { Divider, Icon, Text, makeStyles } from '@rneui/themed';
 import HomeUI from '../components/homeUI';
+import { BACKEND } from '../core/var'
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 
 const useStyles = makeStyles(theme => ({
@@ -18,14 +20,19 @@ const useStyles = makeStyles(theme => ({
 
 export default function Home({navigation}) {
   const styles = useStyles()
+  const [data, setData] = useState()
 
-  const data = [
-    {id:1,name:"Rice",area:"148 ac",stage:"sowing",condition:"critical",img:"https://th.bing.com/th/id/OIP.bSBXls_YudJwhQ9Mp8wmKwHaFa?w=650&h=475&rs=1&pid=ImgDetMain"},
-    {id:2,name:"Tomato",area:"148 ac",stage:"sowing",condition:"critical"},
-    {id:3,name:"Wheat",area:"148 ac",stage:"sowing",condition:"critical"},
-    {id:4,name:"Barley",area:"148 ac",stage:"sowing",condition:"critical"},
-  ]
+  useEffect(()=>{
+    fetch(BACKEND+'auth/getuser_crops/',{
+      method:"GET" ,headers: {'Content-Type': 'application/json',},
+    })
+      .then(res => res.json())
+      .then(data => setData(data))
+      .catch(err => console.error('err : ',err))    
+  },[])
+
   return(
+    data&&
     <HomeUI heading={'Crops'} sub={'Pick the crop for more details'} >
 
       <View>
@@ -35,8 +42,17 @@ export default function Home({navigation}) {
       <View style={styles.more}>
         <Divider width={2}/>
         <View style={styles.centralize} >
-          <Text style={{textAlign:"center",marginTop:30,color:"gray"}} h4>Add more crops</Text>
-          <Icon name="add-circle" size={70} type={"ionicon"} color={'gray'}/>
+          
+          <Text style={{textAlign:"center",marginTop:30,color:"gray"}} h4>
+            Add more crops
+          </Text>
+          <Icon 
+            Component={TouchableOpacity} 
+            name="add-circle" 
+            size={70} 
+            type={"ionicon"} 
+            color={'gray'}
+          />
         </View>
       </View>
 

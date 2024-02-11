@@ -1,20 +1,20 @@
 import {View,StyleSheet, ScrollView } from 'react-native'
 import React from 'react'
 import { Icon, useTheme, Text } from '@rneui/themed';
-import { getRelativeTime } from '../utility';
+import { getRelativeTime } from '../core/utility';
 
-export default function TimelineItem ({event, index, data}) {
+export default function TimelineItem ({event, index, length}) {
   const { theme } = useTheme()
   return(
     <View key={index} style={styles.timelineItem}>
-            {index !== data.length-1 && <View style={styles.line} />}
+            {index !== length-1 && <View style={styles.line} />}
             <View style={[styles.circle,{borderColor:theme.colors.primary,}]}>
-                <Icon name="circle" type="font-awesome" color={theme.colors.primary} size={16} />
+              <Icon name="circle" type="font-awesome" color={theme.colors.primary} size={16} />
             </View>
             <View style={styles.contentContainer}>
-                <Text style={styles.title}>{event.title}</Text>
-                <Text>{event.description}</Text>
-                <Text style={styles.time}>{getRelativeTime( new Date(event.time ) )}</Text>
+                <Text style={styles.activity}>{event.activity}</Text>
+                {event.description && <Text>{event.description}</Text>}
+                <Text style={styles.time}>{getRelativeTime( new Date(event.time.toUpperCase() ) )}</Text>
             </View>
         </View>
   )
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
       marginLeft: 20,
       paddingVertical: 10,
     },
-    title: {
+    activity: {
       fontSize: 18,
       fontWeight: 'bold',
       marginBottom: 5,

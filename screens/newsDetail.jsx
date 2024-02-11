@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Image, View } from 'react-native'
 import React , { useContext } from 'react'
-import { NewsContext, getRelativeTime } from '../utility'
+import { NewsContext, getRelativeTime } from '../core/utility'
 import {Text,useTheme, Icon } from '@rneui/themed'
 import NewsFooter from '../components/newsFooter'
 

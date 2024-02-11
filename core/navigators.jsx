@@ -4,13 +4,15 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Icon,useTheme } from '@rneui/themed'
 import { NewsContext } from './utility';
-import Home from './screens/home';
-import News from './screens/news';
-import NewsDetail from './screens/newsDetail';
-import ColorMode from './components/colorMode';
-import Profile from './screens/profile';
-import Weather from './screens/weather';
-import Crop from './screens/crop';
+import Home from '../screens/home';
+import News from '../screens/news';
+import NewsDetail from '../screens/newsDetail';
+import ColorMode from '../components/colorMode';
+import Profile from '../screens/profile';
+import Weather from '../screens/weather';
+import Crop from '../screens/crop';
+import ExpertHome from '../screens/expertHome';
+import ExpertAddSchedule from '../screens/ExpertAddSchedule';
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -583,6 +585,7 @@ function NewsStack() {
 export default function Navigators() {
   const {theme} = useTheme()
   const navTheme = {...DefaultTheme,colors:{...DefaultTheme.colors, ...theme.colors}} 
+  const isExpert = true
   return (
     <SafeAreaProvider>
     <NavigationContainer theme={navTheme}>
@@ -598,10 +601,20 @@ export default function Navigators() {
         },
         headerRight : (props) => <ColorMode {...props} />,
       })}>
-        <Tab.Screen name='Home' component={HomeStack}/>
-        <Tab.Screen name='Weather' component={Weather}/>
-        <Tab.Screen name='News' component={NewsStack} options={{headerShown:false}}/>
-        <Tab.Screen name='Profile' component={Profile}/>
+        {isExpert ?
+        <>
+          <Tab.Screen name='Home' component={ExpertHome}/>
+          <Tab.Screen name='Add' component={ExpertAddSchedule}/>
+        </>
+        :
+        <>
+          <Tab.Screen name='Home' component={HomeStack}/>
+          <Tab.Screen name='Weather' component={Weather}/>
+          <Tab.Screen name='News' component={NewsStack} options={{headerShown:false}}/>
+          <Tab.Screen name='Profile' component={Profile}/>
+        </>
+        }
+
       </Tab.Navigator>
 
     </NavigationContainer>

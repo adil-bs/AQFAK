@@ -1,6 +1,6 @@
 import React,{ useRef } from 'react'
 import { Animated, Dimensions, FlatList, ImageBackground, StyleSheet, View, } from 'react-native'
-import { getRelativeTime } from '../utility'
+import { getRelativeTime } from '../core/utility'
 import {Text, Icon, useTheme, Image } from '@rneui/themed'
 import NewsFooter from './newsFooter'
 

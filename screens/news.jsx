@@ -2,7 +2,7 @@ import React,{ useContext } from 'react';
 import { FlatList, StyleSheet, View } from "react-native";
 import NewsTrending from '../components/newsTrending';
 import NewsCard from '../components/newsCard';
-import { NewsContext } from '../utility';
+import { NewsContext } from '../core/utility';
 
 export default function News({navigation}) {   
   const {articles} = useContext(NewsContext)

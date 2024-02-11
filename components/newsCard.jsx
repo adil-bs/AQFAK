@@ -1,7 +1,7 @@
 import { StyleSheet,  View } from 'react-native'
 import React from 'react'
 import {Text, Card, Image} from '@rneui/themed'
-import { getRelativeTime } from '../utility'
+import { getRelativeTime } from '../core/utility'
 import NewsFooter from './newsFooter'
 
 export default function NewsCard({item,navigation}) {

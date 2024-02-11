@@ -1,9 +1,9 @@
 import React, { useEffect, useReducer, useState } from 'react';
 import { View, Image, FlatList, TouchableOpacity, LayoutAnimation, ScrollView } from 'react-native';
 import { Text,makeStyles, useThemeMode, Icon, Divider, ListItem, registerCustomIconType, Card } from '@rneui/themed';
-import { camelToCapital, weatherCode, weatherUnits } from '../utility';
-import {   weatherData } from '../components/data';
+import { camelToCapital, weatherCode, weatherUnits } from '../core/utility';
 import { LineChart } from 'react-native-gifted-charts';
+import { BACKEND } from '../core/var';
 
 const reduceCurrentWeather = (state, action) =>{
 
@@ -37,12 +37,25 @@ const reduceCurrentWeather = (state, action) =>{
 
 export default function Weather ()  {
     const styles = useStyles()
+    const [weatherData,setWeatherData] = useState()
     const [currentWeather, dispatchCurrentWeather] = useReducer(reduceCurrentWeather,{})
     const [expanded, setExpanded] = useState(false)
     const {mode} = useThemeMode()
 
     useEffect(()=> {
-        dispatchCurrentWeather({type:"change_day",day:'2023-11-08T',data:weatherData})        
+        fetch(BACKEND+'third/weather/',{
+            method:"GET" ,headers: {'Content-Type': 'application/json',},
+        })
+            .then(res => res.json())
+            .then(data => {
+                setWeatherData(data)
+                dispatchCurrentWeather({
+                    type:"change_day",
+                    day:new Date().toISOString().split('T')[0],
+                    data:data,
+                })        
+            })
+            .catch(err => console.error('err : ',err))   
     },[])
 
     const handleCurrentWeather = (day) => {
@@ -87,8 +100,13 @@ export default function Weather ()  {
     <Divider style={{height:1,backgroundColor:"gray",marginVertical:15}}/>
 
     <View style={styles.centralize}> 
-        <Text h3 >{new Date(currentWeather.day).toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'})}</Text>
-        <Text adjustsFontSizeToFit style={styles.fontMdBold}>{weatherData.location.name}</Text>
+        <Text h3 >
+            {new Date(currentWeather.day).toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'})}
+        </Text>
+        <Text adjustsFontSizeToFit style={[styles.fontMdBold,{textAlign:"center"}]}>
+            {weatherData.location.name}
+        </Text>
+
         <View style={[{flexDirection:"row",marginVertical:30}]}>
             <Image source={weatherCode[currentWeather.summary.weatherCodeMax]?.img} style={{height:110,width:110}}/>
             <View style={[{marginLeft:15}]}>
@@ -122,7 +140,7 @@ export default function Weather ()  {
         }
         isExpanded={expanded}
         onPress={() =>setExpanded(!expanded)}
-        style={{marginTop:35,}}
+        style={{marginTop:35,marginBottom:20,}}
     >
         <ScrollView style={{height:150}} nestedScrollEnabled showsVerticalScrollIndicator={false}>
         {Object.keys(weatherUnits).map(item => {
@@ -223,7 +241,7 @@ export function WeatherDays ({data,current,...props}) {
     const day = new Date(data.time).toLocaleDateString('en-US', { weekday: 'short',day:'numeric' })
     return(
         <TouchableOpacity 
-          activeOpacity={1}
+          activeOpacity={0.7}
           style={[styles.weatherDaysContainer,current && styles.pressedWeatherDays]} 
           {...props}
         >

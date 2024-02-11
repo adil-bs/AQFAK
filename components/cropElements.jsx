@@ -1,14 +1,17 @@
-import { Animated, View, useWindowDimensions,TouchableOpacity, ScrollView, Dimensions,FlatList } from 'react-native'
+import { Animated, View, useWindowDimensions,TouchableOpacity, ScrollView, Dimensions,FlatList, SectionList } from 'react-native'
 import React, { useEffect , useState, useRef} from 'react'
-import { Icon, Text, makeStyles, useThemeMode } from '@rneui/themed'
+import { Icon, Text, makeStyles, useTheme, useThemeMode } from '@rneui/themed'
 import Timeline from './timelineItem'
 import TimelineItem from './timelineItem'
 
-const cropDetailIconProps = {
+export const cropDetailIconProps = {
     Area:{name:"terrain"},
     pH:{name:"thermometer",type:'material-community'},
     Optimal:{name:"shield-check",type:'material-community'},
     Sowing:{name:"seedling",type:"font-awesome-5"},
+    Irrigation:{name:"sprinkler-variant",type:'material-community'},
+    Harvest:{name:"agriculture",},
+    Field:{name:"terrain"},
     Balcony:{name:'balcony',type:'material-community'},
     Pot:{name:'pot',type:'material-community'},
 }
@@ -42,7 +45,7 @@ export function NPK({data,style}) {
     useEffect(()=>{      
         Animated.timing(npkAnimation, {
             toValue: 1,
-            duration: 2000, 
+            duration: 1000, 
             useNativeDriver: false, 
         }).start()
     },[])
@@ -76,140 +79,48 @@ export function NPK({data,style}) {
   )
 }
 
-// export function Scheduler({cropData,widthOffset=0}) {
-//     const [index, setIndex] = useState(0);
-//     const scrollViewRef = useRef(null);
-//     const scrollX = useRef(new Animated.Value(0)).current;
-//     const { width: screenWidth } = Dimensions.get('window');
-  
-//     useEffect(()=>{
-//         const nearestIndex = (scrollValue) => Math.round(scrollValue / (screenWidth-widthOffset)) 
-//         const listener = scrollX.addListener(a => {
-//             // console.log(nearestIndex(a.value),'nearest', index, ' index',index !== nearestIndex(a.value));
-    
-//             if (index !== nearestIndex(a.value)) {
-//                 setIndex(nearestIndex(a.value))
-//             }
-//         })
-//         return () => {
-//             scrollX.removeListener(listener);
-//         };
-//     },[scrollX, index])
-//     // console.log(index,' index');
-
-//     const handleTabPress = (tabIndex) => {
-//         scrollViewRef.current.scrollTo({ x: tabIndex * scrollViewWidth });
-//     };
-//     const scrollViewWidth = screenWidth-widthOffset; 
-//     const tabIndicatorWidth = scrollViewWidth / 2; 
-//     const indicatorPosition = scrollX.interpolate({
-//       inputRange: [0, scrollViewWidth],
-//       outputRange: [0, tabIndicatorWidth],
-//       extrapolate: 'clamp'
-//     });
-
-//     const indicatorBgColor= i => {
-//         const startInterpolate = (index>i) ? i+1 : i
-//         const outputRange = (index>i) ? ['#ADD8E640', '#ADD8E600'] : ['#ADD8E600', '#ADD8E640']
-//         return scrollX.interpolate({
-//             inputRange: [(startInterpolate-1)*scrollViewWidth, startInterpolate*scrollViewWidth],
-//             outputRange,
-//             extrapolate:"clamp"
-//         })
-//     }
-  
-//     return (
-//       <View style={{ flex: 1 }}>
-//         {/* Tab Component */}
-//         <View style={{ flexDirection: 'row',justifyContent:"center",flex:1, alignItems: 'center', height: 50,marginBottom:20 }}>
-//           <TabItem wrapperStyle={{borderTopLeftRadius:10}} title="Schedule" onPress={() => handleTabPress(0)} isActive={index === 0} 
-//             indicatorBgColor={indicatorBgColor(0)}
-//            />
-//           <TabItem wrapperStyle={{borderTopRightRadius:10}} title="History" onPress={() => handleTabPress(1)} isActive={index === 1} 
-//             indicatorBgColor={indicatorBgColor(1)}
-//           />
-//           <Animated.View
-//             style={{
-//               position: 'absolute',
-//               height: 3,
-//               width: tabIndicatorWidth,
-//               backgroundColor: 'blue',
-//               bottom: 0,
-//               left: indicatorPosition
-//             }}
-//           />
-//         </View>
-  
-//         {/* Content */}
-//         <ScrollView
-//           ref={scrollViewRef}
-//           horizontal
-//           pagingEnabled
-//           showsHorizontalScrollIndicator={false}
-//           onScroll={Animated.event(
-//             [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-//             { useNativeDriver: false }
-//           )}
-//           scrollEventThrottle={16}
-//         >
-//           <View style={{ width: scrollViewWidth }}>
-//             <Timeline data={cropData.schedule} />
-//           </View>
-//           <View style={{ width: scrollViewWidth }}>
-//             <Timeline data={cropData.history} />
-//           </View>
-//         </ScrollView>
-//       </View>
-//     );
-//   };
-  
-//   const TabItem = ({ title, onPress, isActive,wrapperStyle ,indicatorBgColor }) => {
-//     const {mode} = useThemeMode()
-//     const textHighlight = mode === 'dark' ? '#ADD8E6' :"blue"
-//     return (
-//       <TouchableOpacity onPress={onPress} style={{flex:1}}>
-//         <Animated.View style={[{ backgroundColor: indicatorBgColor, padding: 10 },wrapperStyle]}>
-//           <Text style={[{ fontSize: 16, fontWeight: 'bold',textAlign:"center" }, isActive ? {color: textHighlight} : {}]}>{title}</Text>
-//         </Animated.View>
-//       </TouchableOpacity>
-//     );
-//   };
-
 export function Scheduler({cropData}) {
   const scheduleRef = useRef()
-  const [schedule, setSchedule] = useState(true);
-  const [currentSchedule, setCurrentSchedule] = useState()
-  const opacity = useState(new Animated.Value(1))[0]
+  const {theme} = useTheme()
+  const TIMELINEITEM_HEIGHT=80
+
+  const sectionData = [
+    {title:'History',data:cropData.schedule.filter(({time})=> new Date() > new Date(time.toUpperCase())),key:0},
+    {title:'Schedule',data:cropData.schedule.filter(({time})=> new Date() <= new Date(time.toUpperCase())),key:1},
+  ]
   
   useEffect(()=>{
-    setCurrentSchedule(() => {
-      const currentSchedule = cropData?.schedule.findIndex(event => new Date() <= new Date(event.time))
-      console.log(currentSchedule);
-      scheduleRef.current?.scrollToIndex({currentSchedule})
-      return currentSchedule
-    })
-
+    const timer = setTimeout(() => {
+      scheduleRef.current?.scrollToLocation({ sectionIndex: 1, itemIndex: 0, viewPosition: 0 });
+    }, 1000);
+  
+    return () => clearTimeout(timer);
   },[])
 
-  function changeSchedule( ) {
-    Animated.sequence([
-      Animated.timing(opacity, { toValue: 0, duration: 500, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-    ]).start();
-    setSchedule(!schedule)
+  function onSectionScrollFailed(info) {
+    console.log('scroll fail',info.index);
   }
+
   return(
-    <View>
-      <Animated.View style={{opacity}}>
-            <Text h3 h3Style={{marginLeft:25,marginBottom:15}}>{schedule ? 'Schedule' : 'History'}</Text>
-          </Animated.View>
-  
-          <FlatList
+    <View style={{}}>
+          <SectionList 
             ref={scheduleRef}
-            data={cropData.schedule}
-            renderItem={({item,index}) => <TimelineItem key={index} event={item} index={index} data={cropData.schedule}/>}
+            sections={sectionData}
+            renderItem={({item,index,section}) => 
+              <TimelineItem event={item} index={index} length={section.data.length}/>
+            }
+            renderSectionHeader={({section: {title,data}}) => 
+              data.length > 0  && <Text style={{backgroundColor:theme.colors.cardUI,paddingBottom:5,paddingLeft:10}} h3>{title}</Text>
+            }
+            SectionSeparatorComponent={()=>
+              <View style={{marginBottom:10,backgroundColor:"red",width:50}}/>
+            }
+            keyExtractor={(item, index) => item + index}
             nestedScrollEnabled
+            stickySectionHeadersEnabled
             showsVerticalScrollIndicator={false}
+            onScrollToIndexFailed={onSectionScrollFailed}
+            getItemLayout={(data, index) => ({ length: TIMELINEITEM_HEIGHT, offset: TIMELINEITEM_HEIGHT * index, index})}
           />
     </View>
   )
