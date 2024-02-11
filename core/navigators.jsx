@@ -12,7 +12,7 @@ import Profile from '../screens/profile';
 import Weather from '../screens/weather';
 import Crop from '../screens/crop';
 import ExpertHome from '../screens/expertHome';
-import ExpertAddSchedule from '../screens/ExpertAddSchedule';
+import ExpertAddSchedule from '../screens/expertAddSchedule';
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -592,7 +592,7 @@ export default function Navigators() {
 
       <Tab.Navigator screenOptions={ ({route}) =>({
         tabBarIcon: ({size,color}) => {
-          const iconName = {Home:'home',Weather:'cloud',News:'newspaper',Profile:'person-circle'}
+          const iconName = {Home:'home',Weather:'cloud',News:'newspaper',Profile:'person-circle',Add:'add-circle'}
           return <Icon name={iconName[route.name]} size={size} type="ionicon" color={color} />;
         },
         tabBarLabelStyle:{
