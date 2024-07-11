@@ -7,6 +7,7 @@ import {CropDetail, NPK, Scheduler} from '../components/cropElements'
 import TimelineItem from '../components/timelineItem'
 import { BACKEND } from '../core/var'
 import { Divider } from 'react-native-paper'
+import { LoadingPage } from '../components/sadPaths'
 
 export default function Crop({route,navigation}) {
   const {name,area,stage,img} = route.params
@@ -16,7 +17,7 @@ export default function Crop({route,navigation}) {
   // const [index, setIndex] = useState(0);
 
   useEffect(()=>{
-    fetch(BACKEND+'auth/getcrop_schedule/?crop='+name,{
+    fetch(BACKEND+'auth/getcrop_details/?crop='+name,{
       method:"GET" ,headers: {'Content-Type': 'application/json',},
     })
       .then(res => res.json())
@@ -24,10 +25,7 @@ export default function Crop({route,navigation}) {
       .catch(err => console.error('err : ',err))    
 
   },[])
-  // useEffect(()=>{
-  //   setCropData({area:'34',stage:'few',grown:'dfewf',schedule:[]})  
 
-  // },[])
   const handleEdit = () => {
     navigation.navigate('CropEdits')
   }
@@ -35,7 +33,7 @@ export default function Crop({route,navigation}) {
 
 
   return (
-    cropData &&
+    cropData ?
     <HomeUI heading={name} img={img} IconRight={<Icon name='edit' onPress={handleEdit} />}>
 
       <Card containerStyle={styles.card1}>
@@ -75,6 +73,9 @@ export default function Crop({route,navigation}) {
       </Card>}
 
     </HomeUI>
+
+    :
+    <LoadingPage/>
   )
 }
 

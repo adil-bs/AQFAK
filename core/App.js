@@ -15,7 +15,7 @@ const App = () => {
       divider:"gray",
     },
     darkColors:{
-      primary:"#9CCC65",
+      primary:"#32D95C",
       secondary:"#4BBF19",
       background:"black",
       text:"#FFFFFF",

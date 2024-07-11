@@ -5,6 +5,7 @@ import { Divider, Icon, Text, makeStyles } from '@rneui/themed';
 import HomeUI from '../components/homeUI';
 import { BACKEND } from '../core/var'
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { LoadingPage } from '../components/sadPaths';
 
 
 const useStyles = makeStyles(theme => ({
@@ -35,7 +36,7 @@ export default function Home({navigation}) {
   },[])
 
   return(
-    data&&
+    data?
     <HomeUI heading={'Crops'} sub={'Pick the crop for more details'} >
 
       <View>
@@ -49,7 +50,7 @@ export default function Home({navigation}) {
           <Text style={{textAlign:"center",marginTop:30,color:"gray"}} h4>
             Add more crops
           </Text>
-          <Icon 
+          <Icon
             Component={TouchableOpacity} 
             name="add-circle" 
             size={70} 
@@ -60,5 +61,8 @@ export default function Home({navigation}) {
       </View>
 
     </HomeUI>
+
+    :
+    <LoadingPage/>
   )
 }

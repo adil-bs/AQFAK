@@ -18,7 +18,7 @@ import Login from '../screens/login';
 import Register1 from '../screens/register1';
 import CropEdits from '../screens/cropEdits';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator } from 'react-native-paper';
+import { ErrorBoundary, LoadingPage } from '../components/sadPaths';
 
 export const AuthContext = createContext()
 
@@ -652,12 +652,13 @@ useEffect(() => {
 console.log(loggedState)
 
 return loading ? (
-  
-  <ActivityIndicator /> // or any loading indicator
+
+  <LoadingPage />
 ) : (
-  <AuthContext.Provider value={{ dispatchLoggedState }}>
+  <AuthContext.Provider value={{ dispatchLoggedState, loggedState }}>
     <SafeAreaProvider>
     <NavigationContainer theme={navTheme}>
+    {/* <ErrorBoundary> */}
 
       {loggedState.loggedIn ?
         <Tab.Navigator screenOptions={ ({route}) =>({
@@ -671,6 +672,8 @@ return loading ? (
           },
           headerRight : (props) => <ColorMode {...props} />,
         })}>
+
+
           {loggedState.isExpert ?
             <>
               <Tab.Screen name='Home' component={ExpertHome}/>
@@ -681,17 +684,19 @@ return loading ? (
               <Tab.Screen name='Home' component={HomeStack}/>
               {/* <Tab.Screen name='Weather' component={Weather}/> */}
               {/* <Tab.Screen name='News' component={NewsStack} options={{headerShown:false}}/> */}
-              <Tab.Screen name='Profile' component={Profile}/>
+              <Tab.Screen name='Profile' component={Profile} />
             </>
           }
+
 
         </Tab.Navigator>
       :
         <LoginStack/>
       }
 
+    {/* </ErrorBoundary> */}
     </NavigationContainer>
     </SafeAreaProvider>
-    </AuthContext.Provider> 
+  </AuthContext.Provider> 
   );
 }
