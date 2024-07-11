@@ -7,6 +7,7 @@ import Add from '../components/add'
 import { LinearGradient } from 'react-native-linear-gradient'
 import { AuthContext } from "../core/navigators";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BACKEND } from "../core/var";
 
 
 const CropEdits = ({ route }) => {
@@ -32,7 +33,7 @@ const CropEdits = ({ route }) => {
     const handleSubmit = async ()=> {
         try {
             console.log("userInfo ",crops);
-            const response = await fetch('https://aqfak-django-five.vercel.app/auth/signup/', {
+            const response = await fetch(BACKEND+'auth/signup/', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'

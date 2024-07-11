@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, Button, Image, TouchableOpacity, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { StyleSheet, View, TextInput, Button, Image, TouchableOpacity, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { useContext, useEffect, useState } from "react";
 import { SegmentedButtons } from "react-native-paper";
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
@@ -9,12 +9,13 @@ import axios from 'axios';
 import { LinearGradient } from 'react-native-linear-gradient'
 import { AuthContext } from "../core/navigators";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BACKEND } from "../core/var";
+import { Text } from "@rneui/themed";
+import { ErrorDialog } from "../components/sadPaths";
 
 const Login = ({ navigation }) => {
   const {dispatchLoggedState} = useContext(AuthContext)
-
   let [userInfo, setUserInfo] = useState('');
-
   const [confirm, setConfirm] = useState(null);
   const [code, setCode] = useState('');
   const [contact, setContact] = useState('');
@@ -22,12 +23,13 @@ const Login = ({ navigation }) => {
   const [isUser, setIsUser] = useState('')
   const [userType, setUserType] = useState('user')
 
-
+  const [isLoading,setIsLoading] = useState({google:false,facebook:false})
+  const [error, setError] = useState({ocurred:false,msg:''})
 
   const postdata = async () => {
     try {
       // csrfToken ="0K9FOy7N5YRa6qbm3zg2Ii7EV9U5BDXvwnIDwK1EXBCzTGP3fgTxMDyB2dDskhyE"
-      const response = await fetch('https://aqfak-django-five.vercel.app/auth/sign/', {
+      const response = await fetch(BACKEND+'auth/sign/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -43,29 +45,30 @@ const Login = ({ navigation }) => {
       } else { return "false" }
     } catch (error) {
       console.error('Error in fetch post:', error);
+      setError({ocurred:true,msg:error.message})
     }
   };
 
 
-  useEffect(() => {
+  useEffect(()=>{
     GoogleSignin.configure({
       scopes: ['https://www.googleapis.com/auth/userinfo.email'],
       WebClientId: '1038003706590-g6m6ag7019na3i16u1slc24nqeif3m38.apps.googleusercontent.com',
     });
-
+  },[]);
+  
+  useEffect(() => {
     if (isUser === 'true') {
       dispatchLoggedState({type:userType+'Login'})
       AsyncStorage.setItem('AQFAK_USER',userInfo.userId)
     } else if (isUser === 'false') {
       navigation.navigate("register1", { userData: userInfo })
     }
-
   }, [isUser]);
 
 
-
-
   const handleGSubmit = async () => {
+    setIsLoading({...isLoading,google:true})
     try {
       await GoogleSignin.hasPlayServices();
       const userInfoDetail = await GoogleSignin.signIn();
@@ -84,6 +87,7 @@ const Login = ({ navigation }) => {
 
 
     } catch (error) {
+      setError({ocurred:true,msg:error.message})
       console.error('Google Sign-In Error:', error);
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         console.debug("can")
@@ -92,42 +96,50 @@ const Login = ({ navigation }) => {
       } else {
         console.debug("other",error.code)
       }
+    }finally{
+      setIsLoading({...isLoading,google:false})
     }
 
   }
 
   const handleFSubmit = async () => {
-    const result = await LoginManager.logInWithPermissions([]);
-    if (result.isCancelled) {
-      throw 'User cancelled the login process';
+    setIsLoading({...isLoading,facebook:true})
+    try{
+      const result = await LoginManager.logInWithPermissions([]);
+      // if (result.isCancelled) {
+      //   throw new Error( 'User cancelled the login process');
+      // }
+      const data = await AccessToken.getCurrentAccessToken();
+
+      if (!data) {
+        throw new Error('Something went wrong obtaining access token');
+      }
+      const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
+      const userCredential = await auth().signInWithCredential(facebookCredential);
+      const facebookUserId = data.userID;
+      const response = await fetch(`https://graph.facebook.com/${facebookUserId}?fields=id,name,picture.type(large)&access_token=${data.accessToken}`);
+
+      if (!response.ok) {
+        throw new Error( 'Failed to fetch user data from Facebook');
+      }
+
+      const userData = await response.json();
+
+      userInfo = {
+        userType: userType,
+        userId: userData.name,
+        photo: userData.picture.data.url
+      }
+      
+      setUserInfo(userInfo)
+      setIsUser(await postdata())
+      console.log("func isuser  ",isUser)
+    }catch(e){
+      setError({ocurred:true,msg:e.message})
+      console.log('error facebook logging : ',e);
+    }finally{
+      setIsLoading({...isLoading,facebook:false})
     }
-    const data = await AccessToken.getCurrentAccessToken();
-
-    if (!data) {
-      throw 'Something went wrong obtaining access token';
-    }
-    const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
-    const userCredential = await auth().signInWithCredential(facebookCredential);
-    const facebookUserId = data.userID;
-    const response = await fetch(`https://graph.facebook.com/${facebookUserId}?fields=id,name,picture.type(large)&access_token=${data.accessToken}`);
-
-    if (!response.ok) {
-      throw 'Failed to fetch user data from Facebook';
-    }
-
-    const userData = await response.json();
-
-    userInfo = {
-      userType: userType,
-      userId: userData.name,
-      photo: userData.picture.data.url
-    }
-    
-    setUserInfo(userInfo)
-    setIsUser(await postdata())
-    console.log("func isuser  ",isUser)
-
- 
   }
 
 
@@ -144,15 +156,13 @@ const Login = ({ navigation }) => {
         userType: userType,
         userId: contact,
       }
-      setUserInfo(userInfo)
-
-    
-
-     
+      setUserInfo(userInfo)   
     } catch (error) {
+      setError({ocurred:true,msg:'Invalid OTP'})
       console.log('Invalid code.');
+    }finally{
+      setShowOtp(false)
     }
-    setShowOtp(false)
   }
 
 
@@ -217,14 +227,14 @@ const Login = ({ navigation }) => {
 
         <View style={{ gap: 10, }}>
 
-          <TouchableOpacity style={styles.social} onPress={handleGSubmit}>
-            <Icon name="google" size={26} color="black" />
-            <Text style={{ color: "black" }} >Continue with Google</Text>
+          <TouchableOpacity style={[styles.social,isLoading.google ?{backgroundColor:'gray'} : styles.google]} onPress={handleGSubmit} disabled={isLoading.google}>
+            <Icon name={isLoading.google ?"spinner" :"google"} size={26} color="black" />
+            <Text bold style={{ color: "white" }} >Continue with Google</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.social} onPress={handleFSubmit}>
-            <Icon name="facebook" size={26} color="black" />
-            <Text style={{ color: "black" }} >Continue with Facebook</Text>
+          <TouchableOpacity style={[styles.social,isLoading.facebook ?{backgroundColor:'gray'} : styles.facebook]} onPress={handleFSubmit} disabled={isLoading.facebook}>
+            <Icon name={isLoading.facebook ?"spinner" :"facebook"} size={26} color="black" />
+            <Text bold style={{ color: "white" }} >Continue with Facebook</Text>
           </TouchableOpacity>
         </View>
         <View>
@@ -233,6 +243,11 @@ const Login = ({ navigation }) => {
           </Text>
         </View>
 
+        <ErrorDialog
+          open={error.ocurred}
+          close={()=>setError({ocurred:false,msg:''})}
+          msg={error.msg}
+        />
       </View>
     </TouchableWithoutFeedback>
   );
@@ -255,9 +270,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingRight: 10,
     alignSelf: 'flex-end',
-
-
-
   },
   img: {
     height: 230,
@@ -304,7 +316,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "white",
     borderColor: "rgba(0, 0, 0, 1.0)",
-  }, text: {
+  },
+  socialIcon:{
+    transform:'spin'
+  },
+  google:{
+    backgroundColor:'red',
+  }, 
+  facebook:{
+    backgroundColor:'blue',
+  },
+  text: {
     color: "black"
   }
 
