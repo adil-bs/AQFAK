@@ -7,7 +7,9 @@ import Add from '../components/add'
 import { LinearGradient } from 'react-native-linear-gradient'
 import { AuthContext } from "../core/navigators";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BACKEND } from "../core/var";
+import { BACKEND, BACKEND2, BACKEND3 } from "../core/var";
+import { Dialog } from "@rneui/themed";
+import { fetchApiCall } from "../core/api";
 
 
 const CropEdits = ({ route }) => {
@@ -33,19 +35,24 @@ const CropEdits = ({ route }) => {
     const handleSubmit = async ()=> {
         try {
             console.log("userInfo ",crops);
-            const response = await fetch(BACKEND+'auth/signup/', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-                // 'X-CSRFToken': csrfToken
-              },
-              body: JSON.stringify({userInfo:userInfo, crops:crops})
-            });
+            // const response = await fetch(BACKEND3+'auth/signup/', {
+            //     // const response = await fetch(BACKEND+'auth/signup/', {
+            //   method: 'POST',
+            //   headers: {
+            //     'Content-Type': 'application/json',
+            //     // 'X-CSRFToken': csrfToken
+            //   },
+            //   body: JSON.stringify({userInfo:userInfo, crops:crops})
+            // });
       
-            const data = await response.json();
+            // const data = await response.json();
+            const data = await fetchApiCall('auth/signup/',{
+                method:'POST',body: JSON.stringify({userInfo:userInfo, crops:crops})
+            })
+
             console.log('Server Response:', data);
             if (data === "data created") {
-                dispatchLoggedState({type:"userLogin"})    
+                dispatchLoggedState({type:"userLogin",token:data.token})    
                 AsyncStorage.setItem('AQFAK_USER',userInfo.userId)
                 console.log("created")
             } else { 
@@ -62,7 +69,6 @@ const CropEdits = ({ route }) => {
     console.log(crops)
 
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             
                 <View style={styles.container}>
 
@@ -71,17 +77,17 @@ const CropEdits = ({ route }) => {
                     <Text style={styles.head}>Add crops</Text>
                         <View>
                             <Text style={styles.text}>Crop</Text>
-                            <TextInput style={styles.input} placeholder="Crop name" value={crop} onChangeText={text => setCrop(text)}></TextInput>
+                            <TextInput style={styles.input} placeholderTextColor={'gray'} placeholder="Crop name" value={crop} onChangeText={text => setCrop(text)}></TextInput>
                         </View>
                         <View style={{ height: 15 }}></View>
                         <View>
                             <Text style={styles.text}>Stage</Text>
-                            <TextInput style={styles.input} placeholder="Select stage " value={stage} onChangeText={text => setStage(text)}></TextInput>
+                            <TextInput style={styles.input} placeholderTextColor={'gray'} placeholder="Select stage " value={stage} onChangeText={text => setStage(text)}></TextInput>
                         </View>
                         <View style={{ height: 15 }}></View>
                         <View>
                             <Text style={styles.text}>Area</Text>
-                            <TextInput style={styles.input} placeholder="Select area " value={area} onChangeText={text => setArea(text)}></TextInput>
+                            <TextInput style={styles.input} placeholderTextColor={'gray'} placeholder="Select area " value={area} onChangeText={text => setArea(text)}></TextInput>
                         </View>
                         <View style={{ height: 15 }}></View>
                         <TouchableOpacity style={styles.submit} onPress={handleAdd} >
@@ -112,8 +118,6 @@ const CropEdits = ({ route }) => {
                     </TouchableOpacity>
                 </View>
             
-
-        </TouchableWithoutFeedback>
     )
 }
 
@@ -127,7 +131,6 @@ const styles = StyleSheet.create({
         paddingBottom: 70,
         backgroundColor: "white",
         justifyContent: 'space-around',
-        padding: 10,
         paddingTop:20,
 
     },
@@ -135,11 +138,11 @@ const styles = StyleSheet.create({
         borderColor:'black',
         borderWidth:.5,
         // backgroundColor:'grey',
-        height:'55%',
-        width:'86%',
+        marginHorizontal:30,
         alignItems:'center',
         justifyContent:'center',
         borderRadius:20,
+        padding:20,
     },
     head: {
         height: 30,
@@ -153,6 +156,7 @@ const styles = StyleSheet.create({
     },
     input: {
         padding: 5,
+        paddingHorizontal:18,
         width: 318,
         height: 55,
         borderRadius: 10,

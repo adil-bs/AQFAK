@@ -1,6 +1,64 @@
 import { useNavigation } from "@react-navigation/native";
 import { createContext } from "react";
+import { Linking, PermissionsAndroid } from "react-native";
+import { launchImageLibrary } from 'react-native-image-picker';
+
 export const NewsContext = createContext()
+
+export const getImageFromUser = async (selectImageUri) => {
+  const options = {
+    mediaType: 'photo',
+    includeBase64: false,
+    maxHeight: 2000,
+    maxWidth: 2000,
+  };
+  if (Platform.OS === 'android') {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: "Camera Permission",
+          message: "This app needs access to your camera to take photos.",
+          buttonNeutral: "Ask Me Later",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK"
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        launchImageLibrary(options, (response) => {
+          if (response.didCancel) {
+            console.log('User cancelled image picker');
+          } else if (response.error) {
+            console.log('Image picker error: ', response.error);
+          } else {
+            let imageUri = response.assets[0].uri;
+            selectImageUri(imageUri);
+          }
+        });
+      } else {
+        console.log(granted);
+        Alert.alert(
+          "Permission Required",
+          "Camera permission is required to use this feature. Please enable it in your phone settings.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() }
+          ]
+        );
+      }
+    } catch (err) {
+      console.warn(err);
+      Alert.alert(
+        "Permission Required",
+        "Camera permission is required to use this feature. Please enable it in your phone settings.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Open Settings", onPress: () => Linking.openSettings() }
+        ]
+      );
+    }
+  }
+};
 
 export function getRelativeTime(dateString) {
     const date = new Date(dateString); 

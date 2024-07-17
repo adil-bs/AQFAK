@@ -24,6 +24,7 @@ export const LoadingPage = (props) => {
     return (
         <View style={styles.container}>
             <Text h4>Fetching the details...</Text>
+            <Dialog.Loading/>
         </View>
     )
 }

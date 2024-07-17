@@ -5,13 +5,12 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 import auth from '@react-native-firebase/auth';
 import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import axios from 'axios';
-import { LinearGradient } from 'react-native-linear-gradient'
 import { AuthContext } from "../core/navigators";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BACKEND } from "../core/var";
-import { Text } from "@rneui/themed";
+import { ButtonGroup, Divider, SocialIcon, Text } from "@rneui/themed";
 import { ErrorDialog } from "../components/sadPaths";
+import { fetchApiCall } from "../core/api";
 
 const Login = ({ navigation }) => {
   const {dispatchLoggedState} = useContext(AuthContext)
@@ -21,28 +20,37 @@ const Login = ({ navigation }) => {
   const [contact, setContact] = useState('');
   const [showOtp, setShowOtp] = useState(false);
   const [isUser, setIsUser] = useState('')
-  const [userType, setUserType] = useState('user')
-
+  const [userTypeIndex, setUserTypeIndex] = useState(0)
   const [isLoading,setIsLoading] = useState({google:false,facebook:false})
   const [error, setError] = useState({ocurred:false,msg:''})
+
+  const userType = ['user','expert']
 
   const postdata = async () => {
     try {
       // csrfToken ="0K9FOy7N5YRa6qbm3zg2Ii7EV9U5BDXvwnIDwK1EXBCzTGP3fgTxMDyB2dDskhyE"
-      const response = await fetch(BACKEND+'auth/sign/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-          // 'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({ "user_id": userInfo.userId })
-      });
+      // const response = await fetch(BACKEND+'auth/sign/', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //     // 'X-CSRFToken': csrfToken
+      //   },
+      //   body: JSON.stringify({ "user_id": userInfo.userId })
+      // });
 
-      const data = await response.json();
-      console.log('Server Response:', data);
-      if (data === "true") {
-        return "true";
-      } else { return "false" }
+      // const data = await response.json();
+      const data = await fetchApiCall('auth/sign/',{
+        method:'POST',body: JSON.stringify({ "user_id": userInfo.userId })
+      })
+      console.log("postData : ",data);
+      if (data.msg === "true") {//data.data not used
+        dispatchLoggedState({type:userType[userTypeIndex]+'Login',token:data.token})
+        AsyncStorage.setItem('AQFAK_USER',userInfo.userId)
+        // return "true";
+      } else {
+        navigation.navigate("register1", { userData: userInfo })
+        // return "false" 
+      }
     } catch (error) {
       console.error('Error in fetch post:', error);
       setError({ocurred:true,msg:error.message})
@@ -57,14 +65,14 @@ const Login = ({ navigation }) => {
     });
   },[]);
   
-  useEffect(() => {
-    if (isUser === 'true') {
-      dispatchLoggedState({type:userType+'Login'})
-      AsyncStorage.setItem('AQFAK_USER',userInfo.userId)
-    } else if (isUser === 'false') {
-      navigation.navigate("register1", { userData: userInfo })
-    }
-  }, [isUser]);
+  // useEffect(() => {
+  //   if (isUser === 'true') {
+  //     dispatchLoggedState({type:userType[userTypeIndex]+'Login',token:})
+  //     AsyncStorage.setItem('AQFAK_USER',userInfo.userId)
+  //   } else if (isUser === 'false') {
+  //     navigation.navigate("register1", { userData: userInfo })
+  //   }
+  // }, [isUser]);
 
 
   const handleGSubmit = async () => {
@@ -73,7 +81,7 @@ const Login = ({ navigation }) => {
       await GoogleSignin.hasPlayServices();
       const userInfoDetail = await GoogleSignin.signIn();
       userInfo = {
-        userType: userType,
+        userType: userType[userTypeIndex],
         userId: userInfoDetail.user.email,
         name: userInfoDetail.user.name,
         photo: userInfoDetail.user.photo
@@ -126,7 +134,7 @@ const Login = ({ navigation }) => {
       const userData = await response.json();
 
       userInfo = {
-        userType: userType,
+        userType: userType[userTypeIndex],
         userId: userData.name,
         photo: userData.picture.data.url
       }
@@ -153,7 +161,7 @@ const Login = ({ navigation }) => {
       await confirm.confirm(code);
       console.log('good');
       userInfo = {
-        userType: userType,
+        userType: userType[userTypeIndex],
         userId: contact,
       }
       setUserInfo(userInfo)   
@@ -171,12 +179,26 @@ const Login = ({ navigation }) => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container} >
 
+        <View style={{ alignItems: 'center' }}>
+          <Text style={styles.head}>Login  or  Signup</Text>
+          <Text >Join the Farming Community</Text>
+        </View>
 
 
-        <SegmentedButtons
+        <View style={styles.img}>
+          <Image
+            style={styles.img}
+            source={require('../assets/Designer.png')}
+          />
+
+
+        </View>
+
+        {/* <SegmentedButtons
           theme={{ colors: { secondaryContainer: '#80e51a', outline: 'green' } }}
           style={styles.selector}
           value={userType}
+          
           onValueChange={setUserType}
           buttons={[
             {
@@ -189,56 +211,54 @@ const Login = ({ navigation }) => {
             },
 
           ]}
+        /> */}
+        <ButtonGroup 
+          buttons={['User Login','Expert Login']}
+          containerStyle={styles.selector}
+          textStyle={{fontWeight:'bold',fontSize:14}}
+          selectedIndex={userTypeIndex}
+          onPress={val => setUserTypeIndex(val)}
         />
 
-        <View style={{ alignItems: 'center' }}>
-          <Text style={styles.head}>Login  or  Signup</Text>
-          <Text style={{color:'black'}}>Join the Farming Community</Text>
-        </View>
-
-
-        <View style={styles.img}>
-          <Image
-            style={styles.img}
-            source={require('../assets/Designer.png')}
-          />
-
-
-        </View>
         {!showOtp ? (
           <View style={{ gap: 10 }}>
-            <TextInput style={styles.input} placeholder="phone no" value={contact} onChangeText={text => setContact(text)}></TextInput>
+            <TextInput style={styles.input} placeholder="Phone number" value={contact} placeholderTextColor={'gray'} onChangeText={text => setContact(text)}/>
             <TouchableOpacity style={styles.submit} onPress={() => signInWithPhoneNumber(contact)}>
-              <Text style={styles.text}>Continue</Text>
+              <Text style={styles.text}>Continue with phone number</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={{ gap: 10 }}>
-            <TextInput style={styles.input} placeholder="otp" value={code} onChangeText={text => setCode(text)}></TextInput>
+            <TextInput style={styles.input} placeholder="otp" value={code} onChangeText={text => setCode(text)}/>
             <TouchableOpacity style={styles.submit} onPress={() => confirmCode(contact)}>
               <Text style={styles.text}>otp</Text>
             </TouchableOpacity>
           </View>
         )}
-        <View style={{ height: 1, backgroundColor: 'black', width: 318 }}>
-
-        </View>
 
 
-        <View style={{ gap: 10, }}>
+        <View>
 
-          <TouchableOpacity style={[styles.social,isLoading.google ?{backgroundColor:'gray'} : styles.google]} onPress={handleGSubmit} disabled={isLoading.google}>
-            <Icon name={isLoading.google ?"spinner" :"google"} size={26} color="black" />
-            <Text bold style={{ color: "white" }} >Continue with Google</Text>
+          <Text style={[styles.head,{fontSize:21}]}>Or continue with</Text>
+
+          <View style={styles.socialContainer}>
+            <SocialIcon type="google" loading={isLoading.google} onPress={handleGSubmit} disabled={isLoading.google}/>
+            <SocialIcon type="facebook" loading={isLoading.facebook} onPress={handleFSubmit} disabled={isLoading.facebook}/>
+          </View>
+
+
+          {/* <TouchableOpacity style={[styles.social,isLoading.google ?{backgroundColor:'gray'} : styles.google]} onPress={handleGSubmit} disabled={isLoading.google}>
+            <SocialIcon type="google" loading={isLoading.google}/>
+            <Text bold style={{ color:'black' }} >Continue with Google</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.social,isLoading.facebook ?{backgroundColor:'gray'} : styles.facebook]} onPress={handleFSubmit} disabled={isLoading.facebook}>
-            <Icon name={isLoading.facebook ?"spinner" :"facebook"} size={26} color="black" />
-            <Text bold style={{ color: "white" }} >Continue with Facebook</Text>
-          </TouchableOpacity>
+            <SocialIcon type="facebook" loading={isLoading.facebook}/>
+            <Text bold style={{ }} >Continue with Facebook</Text>
+          </TouchableOpacity> */}
         </View>
         <View>
-          <Text style={{ color: 'black' }}>
+          <Text>
             By signing in, I agree to Terms & Conditions
           </Text>
         </View>
@@ -258,18 +278,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     paddingTop: 65,
-    flexDirection: "column",
     gap: 35,
     alignItems: 'center',
-    backgroundColor: "white",
   },
   selector: {
     width: "50%",
-    height: 40,
-    position: "absolute",
-    marginTop: 10,
-    paddingRight: 10,
-    alignSelf: 'flex-end',
+    alignSelf: 'center',
+    borderRadius:20,
   },
   img: {
     height: 230,
@@ -288,11 +303,12 @@ const styles = StyleSheet.create({
   },
   input: {
     padding: 5,
+    paddingHorizontal:18,
     width: 318,
     height: 55,
     borderRadius: 10,
-    backgroundColor: 'rgba(242, 245, 240, 1)',
-    color: "black"
+    backgroundColor: '#e3e1e1',
+    color:'black'
   },
   submit: {
     display: 'flex',
@@ -303,28 +319,25 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#80e51a'
   },
-  social: {
-    display: 'flex',
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 318,
-    height: 55,
-    borderRadius: 10,
-    borderStyle: "solid",
-    borderWidth: 1,
-    backgroundColor: "white",
-    borderColor: "rgba(0, 0, 0, 1.0)",
-  },
-  socialIcon:{
-    transform:'spin'
-  },
-  google:{
-    backgroundColor:'red',
-  }, 
-  facebook:{
-    backgroundColor:'blue',
+  // social: {
+  //   display: 'flex',
+  //   flexDirection: 'row',
+  //   gap: 10,
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   width: 318,
+  //   height: 55,
+  //   borderRadius: 10,
+  //   borderStyle: "solid",
+  //   borderWidth: 1,
+  //   backgroundColor: "white",
+  //   borderColor: "rgba(0, 0, 0, 1.0)",
+  // },
+  socialContainer:{
+    display:'flex',
+    flexDirection:'row',
+    gap:20,
+    alignSelf:'center'
   },
   text: {
     color: "black"

@@ -1,6 +1,8 @@
 import {ThemeProvider,createTheme,Skeleton,} from '@rneui/themed'
 import Navigators from './navigators'
-import { useColorScheme } from 'react-native'
+import { Animated, StyleSheet, useColorScheme } from 'react-native'
+import { useEffect, useRef } from 'react';
+import FloatingLabel from '../components/floatingLabel';
 
 const App = () => {
 
@@ -12,7 +14,6 @@ const App = () => {
       background:"#ECF2F1",
       text:"#000000",
       cardUI:"white",
-      divider:"gray",
     },
     darkColors:{
       primary:"#32D95C",
@@ -22,7 +23,8 @@ const App = () => {
       cardUI:"#011516",
       card:"#082422",
     },
-    mode:mode ,
+    mode:'light' ,
+    // mode:mode ,
     components:{
       Text: (props , theme) => ({
         style:{
@@ -46,6 +48,22 @@ const App = () => {
           backgroundColor:theme.colors.cardUI,
         },
       }),
+      Input:(props,theme) => ({
+        // label:(props.placeholder && props.value) ? props.placeholder : '',
+        // labelStyle:{marginBottom:-12,marginLeft:5}        
+        label: props.floatingLabel 
+        ? ((props.placeholder && props.value) ? <FloatingLabel label={props.placeholder} /> : '')
+        : props.label,
+
+        inputStyle:  {
+          borderWidth:1,
+          borderColor:'green',
+          borderRadius:5,
+          backgroundColor:theme.mode === "light" ?'#edffe3' : '#012605',
+          paddingLeft:10,
+        },
+
+      })
     }
   })
   return (
@@ -54,5 +72,6 @@ const App = () => {
     </ThemeProvider>
   )
 }
+
 
 export default App

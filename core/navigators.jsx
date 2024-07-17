@@ -19,6 +19,8 @@ import Register1 from '../screens/register1';
 import CropEdits from '../screens/cropEdits';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ErrorBoundary, LoadingPage } from '../components/sadPaths';
+import { BACKEND, BACKEND2, BACKEND3 } from './var';
+import { authenticateUser, fetchApiCall } from './api';
 
 export const AuthContext = createContext()
 
@@ -612,44 +614,62 @@ export default function Navigators() {
     (state,action) => {
       switch (action.type) {
         case 'userLogin' : 
-          return( {loggedIn:true, isExpert:false} )
+          return( {loggedIn:true,  token:'token ' + action.token , isExpert:false} )
         case 'expertLogin' : 
-          return( {loggedIn:true, isExpert:true} )
-        case 'logout' :
-          return( {...state,loggedIn:false} )
+          return( {loggedIn:true,  token:'token ' + action.token , isExpert:true} )
+        case 'logout' : 
+          return( {...state, token:null ,loggedIn:false} )
       }
     },
-    {loggedIn:false, isExpert:false}
+    {loggedIn:false, token:null, isExpert:false}
   )
 
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  AsyncStorage.getItem('AQFAK_USER')
-    .then(val =>
-      val &&
-      fetch('https://aqfak-django-git-main-adil-bss-projects.vercel.app/auth/sign/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-          // 'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({ user_id: val })
+  useEffect(() => {
+    // AsyncStorage.getItem('AQFAK_USER')
+    //   .then(email =>{
+    //     if (email) {
+    //       return fetch(BACKEND3 + 'auth/sign/', {
+    //         // return fetch(BACKEND + 'auth/sign/', {
+    //         method: 'POST',
+    //         headers: {'Content-Type': 'application/json'},
+    //         body: JSON.stringify({ user_id: email })
+    //       })
+    //     }
+    //   })
+    //   .then(res => res.json())  
+    //   .then(isUser => {     //IMPORTANT !!!  needed to know if that member is a user or expert
+    //     console.log("response /sign ",isUser);
+    //     if (isUser === 'true') {
+    //       dispatchLoggedState({ type: 'userLogin' });
+    //     } else if (isUser === 'false') {
+    //       dispatchLoggedState({ type: 'logout' });
+    //     }
+    //   })
+    //   .catch(err => console.log('err : ', err))
+    //   .finally(() => setLoading(false));
+    AsyncStorage.getItem('AQFAK_USER')
+      .then(email =>{
+        if (email) {
+          console.log(email);
+          return fetchApiCall('auth/sign/',{
+            method:'POST',body: JSON.stringify({ user_id: email })
+          })
+        }
       })
-    )
-    .then(res => res.json())
-    .then(isUser => {
-      // dispatchLoggedState({ type: 'userLogin' })
-      if (isUser === 'true') {
-        dispatchLoggedState({ type: 'userLogin' });
-      } else if (isUser === 'false') {
-        dispatchLoggedState({ type: 'logout' });
-      }
-    })
-    .catch(err => console.log('err : ', err))
-    .finally(() => setLoading(false));
-}, []);
-console.log(loggedState)
+      .then(data => {     //IMPORTANT !!!  needed to know if that member is a user or expert && data.data is not used
+        console.log("response /sign ",data); 
+        if (data.msg === 'true') {
+          dispatchLoggedState({ type: 'userLogin', token: data.token });
+        } else if (data.msg === 'false') {
+          dispatchLoggedState({ type: 'logout' });
+        }
+      })
+      .catch(err => console.log('err : ', err))
+      .finally(() => setLoading(false));
+  }, []);
+  console.log(loggedState)
 
 return loading ? (
 
