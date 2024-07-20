@@ -8,7 +8,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { AuthContext } from "../core/navigators";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BACKEND } from "../core/var";
-import { ButtonGroup, Divider, SocialIcon, Text } from "@rneui/themed";
+import { ButtonGroup, Divider, Input, SocialIcon, Text } from "@rneui/themed";
 import { ErrorDialog } from "../components/sadPaths";
 import { fetchApiCall } from "../core/api";
 
@@ -28,17 +28,6 @@ const Login = ({ navigation }) => {
 
   const postdata = async () => {
     try {
-      // csrfToken ="0K9FOy7N5YRa6qbm3zg2Ii7EV9U5BDXvwnIDwK1EXBCzTGP3fgTxMDyB2dDskhyE"
-      // const response = await fetch(BACKEND+'auth/sign/', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //     // 'X-CSRFToken': csrfToken
-      //   },
-      //   body: JSON.stringify({ "user_id": userInfo.userId })
-      // });
-
-      // const data = await response.json();
       const data = await fetchApiCall('auth/sign/',{
         method:'POST',body: JSON.stringify({ "user_id": userInfo.userId })
       })
@@ -221,15 +210,17 @@ const Login = ({ navigation }) => {
         />
 
         {!showOtp ? (
-          <View style={{ gap: 10 }}>
-            <TextInput style={styles.input} placeholder="Phone number" value={contact} placeholderTextColor={'gray'} onChangeText={text => setContact(text)}/>
+          <View style={{ width:'80%' }}>
+            <Input floatingLabel placeholder="Phone number" value={contact} placeholderTextColor={'gray'} onChangeText={text => setContact(text)}/>
+            {/* <TextInput style={styles.input} placeholder="Phone number" value={contact} placeholderTextColor={'gray'} onChangeText={text => setContact(text)}/> */}
             <TouchableOpacity style={styles.submit} onPress={() => signInWithPhoneNumber(contact)}>
               <Text style={styles.text}>Continue with phone number</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={{ gap: 10 }}>
-            <TextInput style={styles.input} placeholder="otp" value={code} onChangeText={text => setCode(text)}/>
+          <View style={{ width:'80%' }}>
+            <Input floatingLabel placeholder="otp" value={code} onChangeText={text => setCode(text)}/>
+            {/* <TextInput style={styles.input} placeholder="otp" value={code} onChangeText={text => setCode(text)}/> */}
             <TouchableOpacity style={styles.submit} onPress={() => confirmCode(contact)}>
               <Text style={styles.text}>otp</Text>
             </TouchableOpacity>
@@ -301,20 +292,19 @@ const styles = StyleSheet.create({
     fontFamily: "serif",
     fontWeight: 'bold',
   },
-  input: {
-    padding: 5,
-    paddingHorizontal:18,
-    width: 318,
-    height: 55,
-    borderRadius: 10,
-    backgroundColor: '#e3e1e1',
-    color:'black'
-  },
+  // input: {
+  //   padding: 5,
+  //   paddingHorizontal:18,
+  //   width: 318,
+  //   height: 55,
+  //   borderRadius: 10,
+  //   backgroundColor: '#e3e1e1',
+  //   color:'black',
+  // },
   submit: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 318,
     height: 55,
     borderRadius: 10,
     backgroundColor: '#80e51a'

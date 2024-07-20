@@ -1,5 +1,5 @@
-import { View, StyleSheet, ScrollView ,TouchableOpacity, Animated, Dimensions, FlatList} from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import { View, StyleSheet, ScrollView ,TouchableOpacity, Animated, Dimensions, FlatList, Alert} from 'react-native'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import HomeUI from '../components/homeUI'
 import { Card, Text, Icon, useTheme, ButtonGroup, Tab, TabView, makeStyles, useThemeMode } from '@rneui/themed'
 import { camelToCapital } from '../core/utility'
@@ -8,8 +8,11 @@ import TimelineItem from '../components/timelineItem'
 import { BACKEND } from '../core/var'
 import { Divider } from 'react-native-paper'
 import { LoadingPage } from '../components/sadPaths'
+import { AuthContext } from '../core/navigators'
+import { fetchApiCall } from '../core/api'
 
 export default function Crop({route,navigation}) {
+  const {loggedState :{token}} = useContext(AuthContext)
   const {name,area,stage,img} = route.params
   const styles = useStyles()
   const {height : windowHeight} = Dimensions.get("window")
@@ -17,24 +20,43 @@ export default function Crop({route,navigation}) {
   // const [index, setIndex] = useState(0);
 
   useEffect(()=>{
-    fetch(BACKEND+'auth/getcrop_details/?crop='+name,{
-      method:"GET" ,headers: {'Content-Type': 'application/json',},
-    })
-      .then(res => res.json())
+    // fetch(BACKEND+'auth/getcrop_details/?crop='+name,{
+    //   method:"GET" ,headers: {'Content-Type': 'application/json',},
+    // })
+    //   .then(res => res.json())
+    //   .then(data => setCropData(data))
+    //   .catch(err => console.error('err : ',err)) 
+    fetchApiCall('auth/getcrop_details/?crop='+name,{
+        headers: {"Authorization" : token},
+    })  
       .then(data => setCropData(data))
-      .catch(err => console.error('err : ',err))    
+      .catch(err => console.error('err : ',err))  
 
   },[])
 
   const handleEdit = () => {
-    navigation.navigate('CropEdits')
+    navigation.navigate('cropEdits')
+  }
+  const handleDelete = () => {
+    fetchApiCall(`auth/retreive_update_delete_crop/${cropData.id}/`,{
+      method:"DELETE",
+      headers: {"Authorization" : token},
+    })  
+      .then(data => {
+        if (data === 'deleted') {
+          // console.log('deleted');
+          Alert.alert(cropData.name + " crop entry deleted successfully")
+          navigation.navigate('HomeIndex',{shouldRefresh : (new Date()).toDateString()})
+        }
+      })
+      .catch(e => console.error('Error ocurred while deleting ',e.message))
   }
   const nutrientAppl = {growth:'1 month',nutrient:'nutrient 1',amount:'amount 1',status:'good'}
 
 
   return (
     cropData ?
-    <HomeUI heading={name} img={img} IconRight={<Icon name='edit' onPress={handleEdit} />}>
+    <HomeUI heading={name} img={img} IconRight={<Icon name='delete' onPress={handleDelete} />}>
 
       <Card containerStyle={styles.card1}>
         <View style={styles.cropDetailContainer}>   

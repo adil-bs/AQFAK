@@ -61,7 +61,12 @@ const App = () => {
           borderRadius:5,
           backgroundColor:theme.mode === "light" ?'#edffe3' : '#012605',
           paddingLeft:10,
+          ...props.inputStyle,
         },
+        containerStyle:{
+          paddingHorizontal:0,
+          ...props.containerStyle,
+        }
 
       })
     }

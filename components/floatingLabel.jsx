@@ -34,12 +34,13 @@ export default function FloatingLabel({label}) {
 
 const styles = StyleSheet.create({
     floatingLabelView:{
-      position:"absolute",
+      position:"relative",
       zIndex:1,
     },
     floatingLabelText:{
+      position:"absolute",
       color:"gray",
       fontWeight:'bold',
-      left:19,
+      left:10,
     }
 }) 

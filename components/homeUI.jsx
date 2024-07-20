@@ -2,7 +2,7 @@ import { View, ScrollView, Dimensions, ImageBackground } from 'react-native'
 import React from 'react'
 import { Image, Text, makeStyles, useTheme } from '@rneui/themed'
 
-export default function HomeUI({heading,sub,img,IconRight,children}) {
+export default function HomeUI({heading,sub,img,IconRight,children,...scrollViewProps}) {
     const [widthOffset, setWidthOffset] = React.useState(0);
     const styles = useStyles()
     const {theme} = useTheme()
@@ -12,7 +12,7 @@ export default function HomeUI({heading,sub,img,IconRight,children}) {
         setWidthOffset(width * -0.52 );
     }, []);
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
+    <ScrollView showsVerticalScrollIndicator={false} {...scrollViewProps}>
         <View style={[styles.bg,{left:widthOffset}]}>
             <View style={{flex:3}}/>
             

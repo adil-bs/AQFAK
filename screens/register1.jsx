@@ -1,20 +1,35 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, ScrollView, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Input } from '@rneui/themed';
+import { fetchApiCall } from '../core/api';
+import { AuthContext } from '../core/navigators';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Register1 = ({ route }) => {
+  const {dispatchLoggedState} = useContext(AuthContext)
   const { userData } = route.params;
-  const [userInfo, setUserInfo] = useState({ ...userData });
-  const [nn, setNn] = useState(null);
+  const [nn, setNn] = useState(userData.name);
   const [place, setPlace] = useState(null);
   const navigation = useNavigation();
 
   const handleSubmit = useCallback(() => {
     if (!(nn && place)) return ; 
-    setUserInfo({ ...userInfo, nickname: nn, place: place });
-    navigation.navigate('register2', { userDeta: { ...userInfo, nickname: nn, place: place } });
-  }, [userInfo, nn, place, navigation]);
+    fetchApiCall('auth/signup/',{
+      method:'POST',body: JSON.stringify({userInfo: { ...userData, nickname: nn, place: place } })
+    })
+      .then(data =>{
+        if (data.hasOwnProperty('token')) {
+          dispatchLoggedState({type:"register",token:data.token})    
+          AsyncStorage.setItem('AQFAK_USER',userData.userId)
+          console.log("created")
+          navigation.navigate('cropEdits');
+        } else { 
+          console.log('data received but something happen '+data.detail);
+        }
+      })
+      .catch(e => console.error(e))
+  }, [userData, nn, place, navigation]);
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -24,15 +39,15 @@ const Register1 = ({ route }) => {
 
             <View style={{ width: '100%', gap: 10, alignItems: 'center', paddingTop: 5 }}>
                 <Text style={styles.head}>Welcome to Agri</Text>
-                <Text style={{ color: 'black', paddingLeft: 10, fontWeight: 'bold', fontSize: 20 }}>Create Account(1/2) {userInfo.name}</Text>
+                <Text style={{ color: 'black', paddingLeft: 10, fontWeight: 'bold', fontSize: 20 }}>Create Account(1/2) {userData.name}</Text>
             </View>
             <View style={styles.img}>
                 <Image style={styles.img} source={require('../assets/Designer.png')} />
             </View>
-            <View style={{ gap: 10, width: '90%',marginTop:30, }}>
+            <View style={{ gap: 10, width: '90%',marginTop:30, alignItems:"center"}}>
               <Text style={[styles.head,{marginBottom:20}]}>First, let's get to know each other.</Text>
-              <Input floatingLabel placeholder="Name" value={nn}  onChangeText={text => setNn(text)} />
-              <Input floatingLabel placeholder="Place" value={place} onChangeText={text => setPlace(text)} />
+              <Input containerStyle={{width:"90%"}} floatingLabel placeholder="Name" value={nn}  onChangeText={text => setNn(text)} />
+              <Input containerStyle={{width:"90%"}} floatingLabel placeholder="Place" value={place} onChangeText={text => setPlace(text)} />
             </View>
             <TouchableOpacity style={styles.submit} onPress={handleSubmit}>
               <Text style={styles.text}>Continue</Text>

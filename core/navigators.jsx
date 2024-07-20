@@ -35,7 +35,7 @@ export function LoginStack() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name='login'>{(props)=> <Login {...props}/> }</Stack.Screen>
             <Stack.Screen name="register1">{(props)=> <Register1 {...props}/> }</Stack.Screen>
-            <Stack.Screen name="register2">{(props)=> <CropEdits {...props}/> }</Stack.Screen>
+            <Stack.Screen name="cropEdits">{(props)=> <CropEdits {...props}/> }</Stack.Screen>
         </Stack.Navigator>        
   );
 }
@@ -45,7 +45,7 @@ function HomeStack() {
     <Stack.Navigator initialRouteName='Home' screenOptions={{headerShown:false}}>
       <Stack.Screen name='HomeIndex' component={Home} />
       <Stack.Screen name='Crop' component={Crop} />
-      <Stack.Screen name="CropEdits">{(props)=> <CropEdits {...props}/> }</Stack.Screen>
+      <Stack.Screen name="cropEdits">{(props)=> <CropEdits {...props}/> }</Stack.Screen>
     </Stack.Navigator>
   )
 }
@@ -614,14 +614,16 @@ export default function Navigators() {
     (state,action) => {
       switch (action.type) {
         case 'userLogin' : 
-          return( {loggedIn:true,  token:'token ' + action.token , isExpert:false} )
-        case 'expertLogin' : 
-          return( {loggedIn:true,  token:'token ' + action.token , isExpert:true} )
+          return( {...state, loggedIn:true,  token:action.token ?('token ' + action.token) : state.token , registerationProcess:false } )
+        case 'register':
+          return( {...state, loggedIn:true,  token:'token ' + action.token , registerationProcess:true} )
+          case 'expertLogin' : 
+          return( {...state, loggedIn:true,  token:action.token ?('token ' + action.token) : state.token , isExpert:true, registerationProcess:false} )
         case 'logout' : 
           return( {...state, token:null ,loggedIn:false} )
       }
     },
-    {loggedIn:false, token:null, isExpert:false}
+    {loggedIn:false, token:null,registerationProcess:false, isExpert:false}
   )
 
   const [loading, setLoading] = useState(true);
@@ -680,7 +682,7 @@ return loading ? (
     <NavigationContainer theme={navTheme}>
     {/* <ErrorBoundary> */}
 
-      {loggedState.loggedIn ?
+      {loggedState.loggedIn && !loggedState.registerationProcess  ?
         <Tab.Navigator screenOptions={ ({route}) =>({
           tabBarIcon: ({size,color}) => {
             const iconName = {Home:'home',Weather:'cloud',News:'newspaper',Profile:'person-circle',Add:'add-circle'}

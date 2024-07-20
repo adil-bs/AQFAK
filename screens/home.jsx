@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import {  View, ScrollView, Dimensions} from "react-native";
+import {  View, ScrollView, Dimensions, FlatList, RefreshControl} from "react-native";
 import { CropList} from '../components/cropList';
 import { Divider, Icon, Text, makeStyles } from '@rneui/themed';
 import HomeUI from '../components/homeUI';
@@ -21,37 +21,35 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-export default function Home({navigation}) {
+export default function Home({navigation,route}) {
+  const {shouldRefresh} = route.params || 'no refresh'
   const {loggedState :{token}} = useContext(AuthContext)
   const styles = useStyles()
   const [data, setData] = useState()
+  const [refresh, setRefresh] = useState(false)
+  console.log(shouldRefresh);
 
-  useEffect(()=>{
-    // fetch(BACKEND+'auth/getuser_crops/',{
-    //   method:"GET" ,headers: {'Content-Type': 'application/json',"Authorization" : token},
-    // })
-    //   .then(async (res) => {
-    //     if (res.ok){
-    //       return res.json()
-    //     }else {
-    //       console.log((await res.json()).detail);
-    //       throw new Error('Error happened while getting crops')
-    //     }
-    //   })
-      // .then(data => {
-      //   setData(data)
-      // })
-      // .catch(err => console.error('err : ',err))    
-    fetchApiCall('auth/getuser_crops/',{
+  const getCrops = () => {
+    return fetchApiCall('auth/list_create_crop/',{
       headers: {"Authorization" : token},
     })
       .then(data => {setData(data)})
-      .catch(err => console.error('err : ',err))    
-  },[])
+      .catch(err => console.error('err : ',err)) 
+  }
+  const getRefreshedCrops = () => {
+    setRefresh(true)
+    getCrops()
+      .finally(()=>setRefresh(false))
+  }
+  useEffect(()=>{  
+    getCrops()  
+  },[shouldRefresh])
 
   return(
     data?
-    <HomeUI heading={'Crops'} sub={'Pick the crop for more details'} >
+    <HomeUI heading={'Crops'} sub={'Pick the crop for more details'} refreshControl={
+      <RefreshControl refreshing={refresh}  onRefresh={()=> getRefreshedCrops()} />
+    }>
 
       <View>
         {data.map((ele,i) => <CropList key={i} navigation={navigation} {...ele}/>)}
@@ -70,6 +68,7 @@ export default function Home({navigation}) {
             size={70} 
             type={"ionicon"} 
             color={'gray'}
+            onPress={() => navigation.navigate('cropEdits',{role:'edit'})}
           />
         </View>
       </View>
